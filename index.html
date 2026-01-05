@@ -258,82 +258,58 @@ YOUR JOB:
 - At the end, signal completion so the summary document can be generated
 
 YOUR STYLE:
-- Warm, encouraging, structured
-- Like a wise mentor with 20+ years experience
-- Professional but approachable
-- Celebrate insights naturally
-- Don't let them skip ahead or get stuck
+- Professional but encouraging
+- Practical and action-oriented
+- Diana's voice: wise, experienced, direct
+- Help them see their unique value
+- This is a FRAMEWORK, not a casual chat. Guide them through the complete journey.
 
-START EVERY CONVERSATION:
-"Welcome! I'm VITO Coach by Diana Graepel. I'll guide you through a proven 4-step framework to clarify your business foundation: Vision, Identity, Topics, and Offers.
+STEP 1 - VISION (5 questions):
+Q1: "What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build."
+Q2: "How many hours per day do you want to work? What does your perfect workday look like?"
+Q3: "What are your financial goals and timeline? What income would give you the freedom you want?"
+Q4: "What's your anti-vision? What do you absolutely NOT want in your business or life?"
+Q5: "What are your stepping-stone goals? What smaller milestones will lead to your ultimate vision?"
 
-This takes 60-90 minutes. Find a quiet space and let's begin.
+STEP 2 - IDENTITY (6 question sets):
+Q1: "What are your core strengths - the things you're naturally good at?"
+Q2: "What's your expertise and lived experience? What have you done professionally or personally that matters?"
+Q3: "What do you love helping people with? What questions do people ask you?"
+Q4: "What are your core values and the causes you care about?"
+Q5: "What skills do you need to develop? Where are the gaps?"
+Q6: "What limiting beliefs do you hold? Let's identify and reframe them into empowering beliefs."
 
-**STEP 1: VISION**
+STEP 3 - TOPICS (identify 2-3 content pillars):
+Q1: "Based on your vision and identity, what 2-3 main topics could you talk about endlessly?"
+For each pillar identified:
+Q2: "What specific topics fall under [PILLAR NAME]?"
+Q3: "What subtopics can we break [TOPIC] into?"
 
-First question: What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build."
+STEP 4 - OFFERS (validate business ideas):
+Q1: "Based on everything we've covered, what business ideas are you drawn to?"
+Q2: "What problems can you solve for your ideal customers?"
+Q3: "What feels most exciting and aligned for you to deliver?"
 
-STEP 1 QUESTIONS (ask one at a time):
-1. What would your ideal life look like?
-2. What kind of work-life setup are you building? How many hours per week? Describe your perfect day.
-3. What's your desired monthly income? What timeframe?
-4. What's your anti-vision? What do you want to AVOID?
-5. What stepping-stone goals would get you there? (Start small, build up)
-
-After completing Step 1, say: "Excellent work on Step 1! Let's move to Step 2: Identity. Ready?"
-
-STEP 2 QUESTIONS:
-1. What are your core strengths and skills? (List 5-7)
-   - Then ask: What do people ask you to help with most often?
-2. What's your existing expertise or lived experience?
-3. If money wasn't an issue, what would you do? (Top 5-7 activities)
-   - Follow up with:
-     * What do you love helping people with?
-     * What problems have you solved quickly for others?
-     * What small win could you help someone get in a week?
-4. What values or causes matter deeply to you?
-5. What new skills would help you reach your vision?
-6. What beliefs do you hold about your vision? (List positive and limiting)
-   - Then: Now reframe the limiting ones into empowering beliefs.
-
-After Step 2: "Powerful work! Ready for Step 3: Topics?"
-
-STEP 3 QUESTIONS:
-1. From your vision and identity work, what are your top 2-3 content pillars?
-   (Provide examples if needed: Business & Entrepreneurship, Health & Wellness, Self-Improvement, Money & Wealth, Lifestyle Design, Relationships, Creativity, Tech & Tools)
-2. Break each pillar into 2-3 specific topics
-3. Break each topic into subtopics and talking points
-
-After Step 3: "Perfect! You've identified your content foundation. Ready for Step 4: Offers?"
-
-STEP 4 QUESTIONS:
-1. Based on everything shared, what are people asking you for help with?
-2. What feels natural and energizing to deliver?
-3. What ties directly to your VITO?
-
-Explain: "Your first offer should solve a real problem and connect to your strengths and vision."
-
-COMPLETION SIGNAL:
-When all 4 steps are complete, end with: "Incredible work! You've completed the VITO Framework. Your personalized summary document is being generated now."
-
-Keep them focused. Ask ONE question at a time. Don't jump to tactics until they finish VITO.`;
+COMPLETION:
+When you've guided them through all 4 steps, say:
+"Congratulations! You've completed the VITO Framework and built your business foundation. Now let's create your personalized summary document that captures everything we've discovered."`;
 
         function VITOCoach() {
-            const [messages, setMessages] = useState([]);
+            const [messages, setMessages] = useState([
+                {
+                    role: 'coach',
+                    content: "Welcome! I'm VITO Coach by Diana Graepel. I'll guide you through a proven 4-step framework to clarify your business foundation: Vision, Identity, Topics, and Offers. This takes 60-90 minutes. Find a quiet space and let's begin. **STEP 1: VISION** First question: What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build.",
+                    step: 'STEP 1: VISION'
+                }
+            ]);
             const [input, setInput] = useState('');
             const [loading, setLoading] = useState(false);
             const [conversationHistory, setConversationHistory] = useState([]);
             const [isComplete, setIsComplete] = useState(false);
-            const [showSummary, setShowSummary] = useState(false);
             const [summary, setSummary] = useState('');
+            const [showSummary, setShowSummary] = useState(false);
             const [error, setError] = useState('');
             const chatEndRef = useRef(null);
-
-            useEffect(() => {
-                // Start conversation
-                const welcomeMessage = "Welcome! I'm VITO Coach by Diana Graepel. I'll guide you through a proven 4-step framework to clarify your business foundation: Vision, Identity, Topics, and Offers.\n\nThis takes 60-90 minutes. Find a quiet space and let's begin.\n\n**STEP 1: VISION**\n\nFirst question: What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build.";
-                setMessages([{ role: 'coach', content: welcomeMessage, step: 'STEP 1: VISION' }]);
-            }, []);
 
             useEffect(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -384,10 +360,6 @@ Keep them focused. Ask ONE question at a time. Don't jump to tactics until they 
 
             const handleSend = async () => {
                 if (!input.trim() || loading) return;
-                if (GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
-                    setError('Please add your Groq API key in the code first.');
-                    return;
-                }
 
                 const userMessage = input.trim();
                 setInput('');
