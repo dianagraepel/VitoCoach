@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VITO Coach by Diana Graepel</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Avenir Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f5f0 0%, #e8e8e0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Bodoni', 'Old Standard', serif;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 30px;
+            background: #fafaf8;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.coach {
+            text-align: left;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.6;
+        }
+
+        .message.coach .message-bubble {
+            background: white;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .message.user .message-bubble {
+            background: #2c2c2c;
+            color: white;
+            text-align: left;
+        }
+
+        .step-indicator {
+            display: inline-block;
+            background: #f0f0ed;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2c2c2c;
+        }
+
+        button {
+            padding: 14px 28px;
+            background: #2c2c2c;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        button:hover:not(:disabled) {
+            background: #1a1a1a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            animation: pulse 1.4s infinite ease-in-out;
+        }
+
+        .loading:nth-child(2) {
+            animation-delay: 0.2s;
+            margin-left: 4px;
+        }
+
+        .loading:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-left: 4px;
+        }
+
+        @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
+
+        .summary-document {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #2c2c2c;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .summary-document h2 {
+            font-family: 'Bodoni', 'Old Standard', serif;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2c2c2c;
+        }
+
+        .summary-document h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: #2c2c2c;
+        }
+
+        .copy-button {
+            margin-top: 16px;
+            width: 100%;
+            background: #2c2c2c;
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .chat-container {
+                height: 400px;
+                padding: 20px;
+            }
+
+            .message-bubble {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const SYSTEM_PROMPT = `You are VITO Coach, created by Diana Graepel to guide entrepreneurs through her 4-step framework.
+
+VITO FRAMEWORK:
+Step 1 - VISION: Ideal life, work hours, financial goals, anti-vision, stepping-stone goals
+Step 2 - IDENTITY: Strengths, expertise, values, beliefs, skills needed
+Step 3 - TOPICS: Content pillars (2-3), break into topics, then subtopics
+Step 4 - OFFERS: Potential business ideas based on their VITO work
+
+YOUR JOB:
+- Guide them through ALL 4 steps in order
+- Ask ONE question at a time
+- Wait for complete answers before continuing
+- Probe deeper if answers are vague
+- Keep them moving through the framework
+- At the end, signal completion so the summary document can be generated
+
+YOUR STYLE:
+- Warm, encouraging, structured
+- Like a wise mentor with 20+ years experience
+- Professional but approachable
+- Celebrate insights naturally
+- Don't let them skip ahead or get stuck
+
+START EVERY CONVERSATION:
+"Welcome! I'm VITO Coach by Diana Graepel. I'll guide you through a proven 4-step framework to clarify your business foundation: Vision, Identity, Topics, and Offers.
+
+This takes 60-90 minutes. Find a quiet space and let's begin.
+
+**STEP 1: VISION**
+
+First question: What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build."
+
+STEP 1 QUESTIONS (ask one at a time):
+1. What would your ideal life look like?
+2. What kind of work-life setup are you building? How many hours per week? Describe your perfect day.
+3. What's your desired monthly income? What timeframe?
+4. What's your anti-vision? What do you want to AVOID?
+5. What stepping-stone goals would get you there? (Start small, build up)
+
+After completing Step 1, say: "Excellent work on Step 1! Let's move to Step 2: Identity. Ready?"
+
+STEP 2 QUESTIONS:
+1. What are your core strengths and skills? (List 5-7)
+   - Then ask: What do people ask you to help with most often?
+2. What's your existing expertise or lived experience?
+3. If money wasn't an issue, what would you do? (Top 5-7 activities)
+   - Follow up with:
+     * What do you love helping people with?
+     * What problems have you solved quickly for others?
+     * What small win could you help someone get in a week?
+4. What values or causes matter deeply to you?
+5. What new skills would help you reach your vision?
+6. What beliefs do you hold about your vision? (List positive and limiting)
+   - Then: Now reframe the limiting ones into empowering beliefs.
+
+After Step 2: "Powerful work! Ready for Step 3: Topics?"
+
+STEP 3 QUESTIONS:
+1. From your vision and identity work, what are your top 2-3 content pillars?
+   (Provide examples if needed: Business & Entrepreneurship, Health & Wellness, Self-Improvement, Money & Wealth, Lifestyle Design, Relationships, Creativity, Tech & Tools)
+2. Break each pillar into 2-3 specific topics
+3. Break each topic into subtopics and talking points
+
+After Step 3: "Perfect! You've identified your content foundation. Ready for Step 4: Offers?"
+
+STEP 4 QUESTIONS:
+1. Based on everything shared, what are people asking you for help with?
+2. What feels natural and energizing to deliver?
+3. What ties directly to your VITO?
+
+Explain: "Your first offer should solve a real problem and connect to your strengths and vision."
+
+COMPLETION SIGNAL:
+When all 4 steps are complete, end with: "Incredible work! You've completed the VITO Framework. Your personalized summary document is being generated now."
+
+Keep them focused. Ask ONE question at a time. Don't jump to tactics until they finish VITO.`;
+
+        function VITOCoach() {
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [conversationHistory, setConversationHistory] = useState([]);
+            const [isComplete, setIsComplete] = useState(false);
+            const [showSummary, setShowSummary] = useState(false);
+            const [summary, setSummary] = useState('');
+            const [error, setError] = useState('');
+            const chatEndRef = useRef(null);
+
+            useEffect(() => {
+                // Start conversation
+                const welcomeMessage = "Welcome! I'm VITO Coach by Diana Graepel. I'll guide you through a proven 4-step framework to clarify your business foundation: Vision, Identity, Topics, and Offers.\n\nThis takes 60-90 minutes. Find a quiet space and let's begin.\n\n**STEP 1: VISION**\n\nFirst question: What would your ideal life look like? Tell me anything that comes to mind about the specific future you want to build.";
+                setMessages([{ role: 'coach', content: welcomeMessage, step: 'STEP 1: VISION' }]);
+            }, []);
+
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            const callGroqAPI = async (userMessage) => {
+                const newHistory = [...conversationHistory, { role: 'user', content: userMessage }];
+                
+                try {
+                    const response = await fetch('/.netlify/functions/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                { role: 'system', content: SYSTEM_PROMPT },
+                                ...newHistory
+                            ]
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('Full API Error:', errorData);
+                        throw new Error(`API Error: ${response.status} - ${JSON.stringify(errorData)}`);
+                    }
+
+                    const data = await response.json();
+                    const assistantMessage = data.choices[0].message.content;
+
+                    // Check if conversation is complete
+                    if (assistantMessage.includes('completed the VITO Framework') || 
+                        assistantMessage.includes('personalized summary document')) {
+                        setIsComplete(true);
+                    }
+
+                    const updatedHistory = [...newHistory, { role: 'assistant', content: assistantMessage }];
+                    setConversationHistory(updatedHistory);
+
+                    return assistantMessage;
+                } catch (err) {
+                    console.error('API Error:', err);
+                    setError(`Connection error: ${err.message}. Please try again or contact support.`);
+                    return null;
+                }
+            };
+
+            const handleSend = async () => {
+                if (!input.trim() || loading) return;
+                if (GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
+                    setError('Please add your Groq API key in the code first.');
+                    return;
+                }
+
+                const userMessage = input.trim();
+                setInput('');
+                setError('');
+                
+                // Add user message
+                setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+                setLoading(true);
+
+                // Get AI response
+                const response = await callGroqAPI(userMessage);
+                
+                if (response) {
+                    // Determine current step
+                    let currentStep = '';
+                    if (response.includes('STEP 1') || response.includes('Step 1')) currentStep = 'STEP 1: VISION';
+                    else if (response.includes('STEP 2') || response.includes('Step 2')) currentStep = 'STEP 2: IDENTITY';
+                    else if (response.includes('STEP 3') || response.includes('Step 3')) currentStep = 'STEP 3: TOPICS';
+                    else if (response.includes('STEP 4') || response.includes('Step 4')) currentStep = 'STEP 4: OFFERS';
+                    
+                    setMessages(prev => [...prev, { 
+                        role: 'coach', 
+                        content: response,
+                        step: currentStep
+                    }]);
+                }
+
+                setLoading(false);
+            };
+
+            const generateSummary = async () => {
+                setLoading(true);
+                
+                const summaryPrompt = `Based on our complete VITO conversation, create a comprehensive summary document in this exact format:
+
+**[USER'S NAME]'S VITO FRAMEWORK SUMMARY**
+Created with VITO Coach by Diana Graepel
+
+**1. VISION, FINANCIAL OBJECTIVES & TIMEFRAME**
+
+My Lifestyle Vision:
+[Summarize their ideal life, work hours, perfect day]
+
+My Financial Goals:
+[Summarize desired income, timeframe]
+
+My Anti-Vision (What I'm Avoiding):
+[What they don't want]
+
+My Stepping Stone Goals:
+[List their progressive goals]
+
+**2. IDENTITY - WHO I AM & WHAT I BRING**
+
+My Core Strengths & Skills:
+[List their strengths]
+
+My Expertise & Lived Experience:
+[Their background]
+
+What I Love Helping People With:
+[Natural helping tendencies]
+
+My Core Values & Causes:
+[What matters most]
+
+Skills I'm Developing:
+[Gaps identified]
+
+My Empowering Beliefs:
+[Reframed positive beliefs]
+
+**3. TOPICS - WHAT I'LL TALK ABOUT**
+
+Content Pillar 1: [Name]
+- Topics: [List]
+- Subtopics: [List]
+
+Content Pillar 2: [Name]
+- Topics: [List]
+- Subtopics: [List]
+
+**4. POTENTIAL BUSINESS IDEAS & OFFERS**
+
+Based on my VITO work:
+[Business ideas that emerged]
+
+Problems I Can Solve:
+[Validated problems]
+
+Natural Offers That Align:
+[What they're energized to deliver]
+
+**NEXT STEPS**
+✓ Completed VITO - foundation is set
+✓ Move to OSCAR Workshop to craft your irresistible offer
+✓ Visit www.dianagraepel.com
+
+Use ALL the information from our conversation to fill this in completely.`;
+
+                try {
+                    const response = await fetch('/.netlify/functions/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                ...conversationHistory,
+                                { role: 'user', content: summaryPrompt }
+                            ]
+                        }),
+                    });
+
+                    const data = await response.json();
+                    setSummary(data.choices[0].message.content);
+                    setShowSummary(true);
+                } catch (err) {
+                    setError('Error generating summary. Please try again.');
+                }
+
+                setLoading(false);
+            };
+
+            const copySummary = () => {
+                navigator.clipboard.writeText(summary);
+                alert('Summary copied to clipboard!');
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                }
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>VITO COACH</h1>
+                        <p>by Diana Graepel</p>
+                    </div>
+
+                    <div className="chat-container">
+                        {error && <div className="error-message">{error}</div>}
+                        
+                        {messages.map((msg, idx) => (
+                            <div key={idx} className={`message ${msg.role}`}>
+                                {msg.step && msg.role === 'coach' && (
+                                    <div className="step-indicator">{msg.step}</div>
+                                )}
+                                <div className="message-bubble">
+                                    {msg.content}
+                                </div>
+                            </div>
+                        ))}
+
+                        {loading && (
+                            <div className="message coach">
+                                <div className="message-bubble">
+                                    <span className="loading"></span>
+                                    <span className="loading"></span>
+                                    <span className="loading"></span>
+                                </div>
+                            </div>
+                        )}
+
+                        {isComplete && !showSummary && (
+                            <div className="message coach">
+                                <div className="message-bubble">
+                                    <button onClick={generateSummary} disabled={loading}>
+                                        Generate My VITO Summary Document
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {showSummary && (
+                            <div className="summary-document">
+                                {summary}
+                                <button className="copy-button" onClick={copySummary}>
+                                    Copy Summary to Clipboard
+                                </button>
+                            </div>
+                        )}
+
+                        <div ref={chatEndRef} />
+                    </div>
+
+                    {!isComplete && (
+                        <div className="input-area">
+                            <div className="input-container">
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="Type your answer here..."
+                                    rows="3"
+                                    disabled={loading}
+                                />
+                                <button onClick={handleSend} disabled={loading || !input.trim()}>
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<VITOCoach />, document.getElementById('root'));
+    </script>
+</body>
+</html>
